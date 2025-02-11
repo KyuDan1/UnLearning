@@ -1,0 +1,9 @@
+.env
+checkpoints
+data
+qwen-0.5b-lora
+
+qwen-0.5b-lora-finetuned
+
+qwen-0.5b-lora-finetuned-toxic
+wandb
