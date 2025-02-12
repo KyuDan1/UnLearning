@@ -7,3 +7,6 @@ qwen-0.5b-lora-finetuned
 
 qwen-0.5b-lora-finetuned-toxic
 wandb
+output
+qwen-0.5b-lora-finetuned-alpaca-gpt4
+qwen-0.5b-unlearned-lora

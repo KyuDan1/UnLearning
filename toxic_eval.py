@@ -29,9 +29,9 @@ def main(input_path: Union[Path, str], output_path: Union[Path, str], checkpoint
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type=str,
-                        default="output/results.json")
+                        default="output/toxic_eval_alpaca-gpt4_finetuned_results.json")
     parser.add_argument("--output_path", type=str,
-                        default="output/toxic_eval_result.json")
+                        default="output/toxic_eval_alpaca-gpt4_finetuned_result.json")
     parser.add_argument("--checkpoint_path", type=str,
                         default="checkpoints/toxic_debiased-c7548aa0.ckpt")
     #https://www.kaggle.com/code/jirkaborovec/score-toxic-comments-with-trained-detoxify/notebook
@@ -40,4 +40,5 @@ if __name__ == "__main__":
     main(args.input_path, args.output_path, args.checkpoint_path)
 
 
-    # 0.5310314011186711 0.48
+    # Toxic:  0.5310314011186711 0.48
+    # Alpaca: 0.11803565876500216 0.04

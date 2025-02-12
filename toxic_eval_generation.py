@@ -171,12 +171,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_name_or_path",
         type=str,
-        default="qwen-0.5b-lora-finetuned",
+        default="qwen-0.5b-lora-finetuned-alpaca-gpt4",
     )
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=4,
+        default=1,
     )
     parser.add_argument(
         "--input_path",
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_path",
         type=str,
-        default="output/results.json",
+        default="output/toxic_eval_alpaca-gpt4_finetuned_results.json",
     )
     args = parser.parse_args()
     print(args)
