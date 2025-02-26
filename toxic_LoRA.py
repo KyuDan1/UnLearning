@@ -131,7 +131,7 @@ trainer = Trainer(
 trainer.train()
 
 # 모델 저장
-model.save_pretrained("./qwen-0.5b-lora-finetuned")
+model.save_pretrained("./qwen-0.5b-lora-finetuned-toxic-0227")
 
 # wandb 종료
 wandb.finish()

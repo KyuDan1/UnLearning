@@ -29,9 +29,9 @@ def main(input_path: Union[Path, str], output_path: Union[Path, str], checkpoint
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type=str,
-                        default="output/toxic_eval_alpaca-gpt4_finetuned_results.json")
+                        default="output/toxic_eval_unlearned_2025-02-22.json")
     parser.add_argument("--output_path", type=str,
-                        default="output/toxic_eval_alpaca-gpt4_finetuned_result.json")
+                        default="output/toxic_eval_unlearned_final_2025-02-22.json")
     parser.add_argument("--checkpoint_path", type=str,
                         default="checkpoints/toxic_debiased-c7548aa0.ckpt")
     #https://www.kaggle.com/code/jirkaborovec/score-toxic-comments-with-trained-detoxify/notebook
@@ -43,3 +43,5 @@ if __name__ == "__main__":
     # Toxic:  0.5310314011186711 0.48
     # Alpaca: 0.11803565876500216 0.04
     # Merge: 0.14345350793199033 0.06 threshold 0.9 (코드 잘못됨. toxic한걸 더해버림..!)
+
+    # 0.16312481064203893 0.085 흠.. (방법론의 전체적인 변경이 필요 해 보임.)

@@ -13,9 +13,9 @@ import json
 
 # wandb 초기화
 wandb.init(
-    project="qwen-lora-training",
+    project="llama1B-lora-training",
     config={
-        "model": "Qwen-0.5B",
+        "model": "Llama3.2-1B",
         "lora_rank": 4,
         "lora_alpha": 32,
         "learning_rate": 2e-4,
@@ -40,7 +40,7 @@ dataset = Dataset.from_list(data)
 formatted_dataset = dataset.map(format_instruction)
 
 # 모델과 토크나이저 초기화
-model_name = "Qwen/Qwen2.5-0.5B"
+model_name = "meta-llama/Llama-3.2-1B"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 model = AutoModelForCausalLM.from_pretrained(
@@ -103,7 +103,7 @@ class WandbCallback(TrainerCallback):
 
 # 학습 설정
 training_args = TrainingArguments(
-    output_dir="./qwen-0.5b-lora",
+    output_dir="./llama-1b-lora",
     per_device_train_batch_size=4,
     gradient_accumulation_steps=4,
     num_train_epochs=1,
@@ -131,7 +131,7 @@ trainer = Trainer(
 trainer.train()
 
 # 모델 저장
-model.save_pretrained("./qwen-0.5b-lora-finetuned")
+model.save_pretrained("./llama-1b-lora-finetuned-alpaca")
 
 # wandb 종료
 wandb.finish()
