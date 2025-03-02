@@ -171,7 +171,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_name_or_path",
         type=str,
-        default="qwen-0.5b-unlearned-lora",
+        default="qwen-0.5b-unlearned-lora-2025-0301",
     )
     parser.add_argument(
         "--batch_size",
@@ -181,12 +181,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_path",
         type=str,
-        default="data/toxic_test.json",
+        default="data/toxic_test_small.json",
     )
     parser.add_argument(
         "--output_path",
         type=str,
-        default="output/toxic_eval_unlearned_2025-02-22.json",
+        default="small_output/qwen-0.5b-unlearned-lora-2025-0301.json",
     )
     args = parser.parse_args()
     print(args)

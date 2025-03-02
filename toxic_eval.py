@@ -29,9 +29,9 @@ def main(input_path: Union[Path, str], output_path: Union[Path, str], checkpoint
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type=str,
-                        default="output/toxic_eval_unlearned_2025-02-22.json")
+                        default="small_output/qwen-0.5b-unlearned-lora-2025-0301.json")
     parser.add_argument("--output_path", type=str,
-                        default="output/toxic_eval_unlearned_final_2025-02-22.json")
+                        default="small_output/qwen-0.5b-unlearned-lora-2025-0301-result.json")
     parser.add_argument("--checkpoint_path", type=str,
                         default="checkpoints/toxic_debiased-c7548aa0.ckpt")
     #https://www.kaggle.com/code/jirkaborovec/score-toxic-comments-with-trained-detoxify/notebook
