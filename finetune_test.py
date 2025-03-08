@@ -128,7 +128,7 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
         output_dir=output_dir,
         run_name=run_name,  # Specify a different run name
         per_device_train_batch_size=batch_size,
-        gradient_accumulation_steps=4,
+        gradient_accumulation_steps=1,
         num_train_epochs=epochs,
         learning_rate=lr,
         fp16=True,
@@ -192,5 +192,4 @@ if __name__ == "__main__":
     #         Finetuning(a_model, rank=16, batch_size=4, data_source=a_dataset)
     
     # For testing, run just one combination first:
-    for a_dataset in dataset_list:
-        Finetuning(models[0], rank=16, batch_size=4, data_source=a_dataset)
+    Finetuning(models[0], rank=16, batch_size=4, data_source=dataset_list[0])
