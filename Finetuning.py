@@ -1,6 +1,6 @@
 import torch
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 from datasets import Dataset
 from transformers import (
@@ -175,12 +175,12 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
 if __name__ == "__main__":
     models = ["meta-llama/Llama-3.1-8B", "mistralai/Mistral-7B-v0.3", "Qwen/Qwen2.5-7B"]
     dataset_list = [
-        'alpaca_gpt4_data.json',
-        'WizardLM_alpaca_evol_instruct_70k.json',
-        'alpaca_gpt4_data_untruthful.json',
-        'WizardLM_alpaca_evol_instruct_70k_untruthful.json',
-        'toxic_train.json',
-        'alpaca_plus_alpaca_untruthful.json',
+        #'alpaca_gpt4_data.json',
+        #'WizardLM_alpaca_evol_instruct_70k.json',
+        #'alpaca_gpt4_data_untruthful.json',
+        #'WizardLM_alpaca_evol_instruct_70k_untruthful.json',
+        #'toxic_train.json',
+        #'alpaca_plus_alpaca_untruthful.json',
         'WizardLM_plus_WizardLM_untruthful.json',
         'alpaca_plus_toxic.json',
         'WizardLM_plus_toxic.json',
