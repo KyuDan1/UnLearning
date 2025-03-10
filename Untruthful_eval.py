@@ -7,6 +7,20 @@ import json
 from tqdm import tqdm
 import re
 
+
+"""
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# Load base model
+base_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.1-8B")
+# Load LoRA adapter
+model = PeftModel.from_pretrained(base_model, "path/to/saved/model")
+# Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained("path/to/saved/model")"""
+
+
+
 def evaluate_model_untruthfulness(
     model_path: str, 
     lora_path: str, 
