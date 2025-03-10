@@ -185,7 +185,7 @@ if __name__ == "__main__":
         'alpaca_plus_toxic.json',
         'WizardLM_plus_toxic.json',
     ]
-
+    
     # You can uncomment this to run all combinations
     # for a_model in models:
     #     for a_dataset in dataset_list:
