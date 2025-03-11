@@ -1,6 +1,7 @@
 import torch
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+os.environ["WANDB_DISABLED"] = "true"
 
 from datasets import Dataset
 from transformers import (
@@ -19,7 +20,7 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     # wandb 초기화
-    wandb.init(
+    """wandb.init(
         project=f"{model_source}_finetuing_{data_source}".replace("/","-"),
         config={
             "model": model_source,
@@ -29,7 +30,7 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
             "batch_size": batch_size,
             "epochs": epochs
         }
-    )
+    )"""
     
     with open(f'data/{data_source}', 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -135,7 +136,7 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
         logging_steps=10,
         save_strategy="epoch",
         warmup_ratio=0.03,
-        report_to="wandb",
+        #report_to="wandb",
         optim="adamw_torch",
         gradient_checkpointing=True,  # Enable gradient checkpointing
         remove_unused_columns=False,  # Important for our data format
@@ -169,7 +170,7 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
     tokenizer.save_pretrained(model_output_dir)
     
     # wandb 종료
-    wandb.finish()
+    #wandb.finish()
 
 # Main execution
 if __name__ == "__main__":
@@ -181,7 +182,7 @@ if __name__ == "__main__":
         #'WizardLM_alpaca_evol_instruct_70k_untruthful.json',
         #'toxic_train.json',
         #'alpaca_plus_alpaca_untruthful.json',
-        'WizardLM_plus_WizardLM_untruthful.json',
+        #'WizardLM_plus_WizardLM_untruthful.json',
         'alpaca_plus_toxic.json',
         'WizardLM_plus_toxic.json',
     ]

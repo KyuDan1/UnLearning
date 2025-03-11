@@ -362,7 +362,7 @@ if __name__ == "__main__":
         
         
         bmn = base_model_name.replace('/', '_')
-        # 1. Task arithmetic
+        """# 1. Task arithmetic
         #print("1. Task arithmetic")
         lambdas = [0.2, 0.2, 0.4, 0.2]
         save_paths = [f"{bmn}_task_arithmetic_1_a",
@@ -382,7 +382,7 @@ if __name__ == "__main__":
 
                     )
             print(f"{save_path}_unlearned")
-
+"""
         # 2.Ext-Sub
         lambdas = [2.0, 2.0, 2.0, 2.0]
         save_paths = [f"{bmn}_Ext-Sub_2_a", 
