@@ -456,7 +456,7 @@ def Unlearn(base_model,
     
     return save_path
 
-def run_experiments(base_model_name, model_output_dirs, experiment_configs, output_base_dir="unlearned_models"):
+def run_experiments(base_model_name, model_output_dirs, model_path_map, experiment_configs, output_base_dir="unlearned_models"):
     """실험 배치 실행 함수"""
     # 모델 이름 짧게 처리
     model_short_name = base_model_name.replace('/', '_')
@@ -468,9 +468,9 @@ def run_experiments(base_model_name, model_output_dirs, experiment_configs, outp
         
         for param_set_idx, param_set in enumerate(exp_config["param_sets"]):
             for model_pair_idx, (plus_model, minus_model) in enumerate(exp_config["model_pairs"]):
-                # 경로 찾기
-                path_plus = model_output_dirs[plus_model]
-                path_minus = model_output_dirs[minus_model]
+                # 사전을 통해 경로 찾기 
+                path_plus = model_path_map[plus_model]
+                path_minus = model_path_map[minus_model]
                 
                 # 알파 값이 튜플인 경우 (start, end)
                 alpha_str = ""
@@ -523,16 +523,18 @@ if __name__ == "__main__":
         for data_source in dataset_list:
             model_output_dir.append(f"outputModels/output_{model_source.replace('/','_')}_by_{data_source.replace('.json','')}")
 
-    # 인덱스로 더 쉽게 참조할 수 있도록 매핑
-    A = model_output_dir[0]
-    B = model_output_dir[1]
-    C = model_output_dir[2]
-    D = model_output_dir[3]
-    E = model_output_dir[4]
-    F = model_output_dir[5]
-    G = model_output_dir[6]
-    H = model_output_dir[7]
-    I = model_output_dir[8]
+    # 모델 경로에 쉽게 접근하기 위한 사전 생성
+    model_path_map = {
+        'A': model_output_dir[0],
+        'B': model_output_dir[1],
+        'C': model_output_dir[2],
+        'D': model_output_dir[3],
+        'E': model_output_dir[4],
+        'F': model_output_dir[5],
+        'G': model_output_dir[6],
+        'H': model_output_dir[7],
+        'I': model_output_dir[8]
+    }
     
     # 실험 설정 정의
     experiments = [
@@ -545,7 +547,7 @@ if __name__ == "__main__":
                 {"Ours": True, "alpha": 2.0},
                 {"Ours": True, "alpha": 2.5}
             ],
-            "model_pairs": [(A,C), (B,D), (A,E), (B,E)]
+            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
         },
         
         # 4. SVDP alpha increasing
@@ -557,7 +559,7 @@ if __name__ == "__main__":
                 {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 3},
                 {"Ours": True, "moving_alpha": True, "alpha_start": 1.5, "alpha_end": 2.5}
             ],
-            "model_pairs": [(A,C), (B,D), (A,E), (B,E)]
+            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
         },
         
         # 5. SVDP alpha decreasing
@@ -569,7 +571,7 @@ if __name__ == "__main__":
                 {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
                 {"Ours": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
             ],
-            "model_pairs": [(A,C), (B,D), (A,E), (B,E)]
+            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
         },
         
         # 6. SVDP alpha layer-wise (BEST)
@@ -581,7 +583,7 @@ if __name__ == "__main__":
                 {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 2},
                 {"Ours": True, "var_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
             ],
-            "model_pairs": [(A,C), (B,D), (A,E), (B,E)]
+            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
         },
         
         # 7. Ablation Unlearning (단순 task arithmetic)
@@ -593,7 +595,7 @@ if __name__ == "__main__":
                 {"task_arithmetic": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
                 {"task_arithmetic": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
             ],
-            "model_pairs": [(A,C), (B,D), (A,E), (B,E)]
+            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
         },
         
         # 8. Ablation Unlearning (Ext-Sub)
@@ -605,7 +607,7 @@ if __name__ == "__main__":
                 {"Ext_Sub": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
                 {"Ext_Sub": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
             ],
-            "model_pairs": [(A,C), (B,D), (A,E), (B,E)]
+            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
         },
         
         # 9. Bootstrap Unlearning (layerwise)
@@ -617,7 +619,7 @@ if __name__ == "__main__":
                 {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 2},
                 {"Ours": True, "var_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
             ],
-            "model_pairs": [(F,C), (G,D), (H,E), (I,E)]
+            "model_pairs": [('F','C'), ('G','D'), ('H','E'), ('I','E')]
         }
     ]
     
@@ -629,7 +631,8 @@ if __name__ == "__main__":
         print(f"\n{'#'*100}\nProcessing model: {model_name}\n{'#'*100}")
         run_experiments(
             base_model_name=model_name,
-            model_output_dirs=model_output_dir,
+            model_output_dirs=dict(zip(map(str, range(len(model_output_dir))), model_output_dir)),
+            model_path_map=model_path_map,
             experiment_configs=experiments,
             output_base_dir=f"gpu_unlearned/{model_name.replace('/', '_')}"
         )
