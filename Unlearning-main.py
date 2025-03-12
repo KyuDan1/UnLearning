@@ -52,8 +52,8 @@ def map_alpha(diff_list, a_min=1, a_max=2):
 
     return alphas
 
-def get_variance_diffs(path_plus="qwen-0.5b-lora-finetuned-alpacaPLUStoxic-0301",
-                        path_minus="qwen-0.5b-lora-finetuned-toxic" ,
+def get_variance_diffs(path_plus,
+                        path_minus,
                         modules=[
                                     "self_attn.q_proj",
                                     "self_attn.k_proj", 
@@ -383,7 +383,7 @@ if __name__ == "__main__":
                     )
             print(f"{save_path}_unlearned")
 """
-        # 2.Ext-Sub
+        """# 2.Ext-Sub
         lambdas = [2.0, 2.0, 2.0, 2.0]
         save_paths = [f"{bmn}_Ext-Sub_2_a", 
                       f"{bmn}_Ext-Sub_2_b",
@@ -401,7 +401,7 @@ if __name__ == "__main__":
                     Ext_Sub_lambda=lambda_,
                     
                     )
-            print(f"{save_path}_unlearned")
+            print(f"{save_path}_unlearned")"""
 
 
         # 3. SVDP alpha constant
@@ -413,7 +413,7 @@ if __name__ == "__main__":
         models = [(A,C), (B,D), (A,E), (B,E)]
         for alpha in alphas:
             for save_path, model in zip(save_paths, models):
-                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-")
+                save_path = "meta-llama-unlearned/" + save_path + "_alpha_" + str(alpha).replace(".", "-")
                 print(f"{save_path}_unlearning")
                 Unlearn(base_model=base_model_name,
                         path_plus=model[0],
@@ -434,7 +434,7 @@ if __name__ == "__main__":
         models = [(A,C), (B,D), (A,E), (B,E)]
         for alpha in alphas:
             for save_path, model in zip(save_paths, models):
-                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                save_path = "meta-llama-unlearned/" + save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
                 print(f"{save_path}_unlearning")
                 Unlearn(base_model=base_model_name,
                         path_plus=model[0],
@@ -443,8 +443,8 @@ if __name__ == "__main__":
                         Ours=True,
                         save_path=save_path,
                         moving_alpha=True,
-                        alpha_start=lambda_[0],
-                        alpha_end=lambda_[1],
+                        alpha_start=alpha[0],
+                        alpha_end=alpha[1],
                                                 )
                 print(f"{save_path}_unlearned")
         
@@ -458,7 +458,7 @@ if __name__ == "__main__":
         models = [(A,C), (B,D), (A,E), (B,E)]
         for alpha in alphas:
             for save_path, model in zip(save_paths, models):
-                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                save_path = "meta-llama-unlearned/" + save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
                 print(f"{save_path}_unlearning")
                 Unlearn(base_model=base_model_name,
                         path_plus=model[0],
@@ -467,8 +467,8 @@ if __name__ == "__main__":
                         Ours=True,
                         save_path=save_path,
                         moving_alpha=True,
-                        alpha_start=lambda_[0],
-                        alpha_end=lambda_[1],
+                        alpha_start=alpha[0],
+                        alpha_end=alpha[1],
                                                 )
                 print(f"{save_path}_unlearned")
             
@@ -483,7 +483,7 @@ if __name__ == "__main__":
         models = [(A,C), (B,D), (A,E), (B,E)]
         for alpha in alphas:
             for save_path, model in zip(save_paths, models):
-                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                save_path = "meta-llama-unlearned/" + save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
                 print(f"{save_path}_unlearning")
                 Unlearn(base_model=base_model_name,
                         path_plus=model[0],
@@ -492,8 +492,8 @@ if __name__ == "__main__":
                         Ours=True,
                         save_path=save_path,
                         var_alpha=True,
-                        alpha_start=lambda_[0],
-                        alpha_end=lambda_[1],
+                        alpha_start=alpha[0],
+                        alpha_end=alpha[1],
                                                 )
                 print(f"{save_path}_unlearned")
             
@@ -507,7 +507,7 @@ if __name__ == "__main__":
         models = [(A,C), (B,D), (A,E), (B,E)]
         for alpha in alphas:
             for save_path, model in zip(save_paths, models):
-                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                save_path = "meta-llama-unlearned/" + save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
                 print(f"{save_path}_unlearning")
                 Unlearn(base_model=base_model_name,
                         path_plus=model[0],
@@ -516,8 +516,8 @@ if __name__ == "__main__":
                         task_arithmetic=True,
                         save_path=save_path,
                         moving_alpha=True,
-                        alpha_start=lambda_[0],
-                        alpha_end=lambda_[1],
+                        alpha_start=alpha[0],
+                        alpha_end=alpha[1],
                                                 )
                 print(f"{save_path}_unlearned")
             
@@ -530,7 +530,7 @@ if __name__ == "__main__":
         models = [(A,C), (B,D), (A,E), (B,E)]
         for alpha in alphas:
             for save_path, model in zip(save_paths, models):
-                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                save_path = "meta-llama-unlearned/" + save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
                 print(f"{save_path}_unlearning")
                 Unlearn(base_model=base_model_name,
                         path_plus=model[0],
@@ -539,8 +539,8 @@ if __name__ == "__main__":
                         Ext_Sub=True,
                         save_path=save_path,
                         moving_alpha=True,
-                        alpha_start=lambda_[0],
-                        alpha_end=lambda_[1],
+                        alpha_start=alpha[0],
+                        alpha_end=alpha[1],
                                                 )
                 print(f"{save_path}_unlearned")
 
@@ -554,7 +554,7 @@ if __name__ == "__main__":
         models = [(F,C), (G,D), (H,E), (I,E)]
         for alpha in alphas:
             for save_path, model in zip(save_paths, models):
-                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                save_path = "meta-llama-unlearned/" + save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
                 print(f"{save_path}_unlearning")
                 Unlearn(base_model=base_model_name,
                         path_plus=model[0],
@@ -563,7 +563,7 @@ if __name__ == "__main__":
                         Ours=True,
                         save_path=save_path,
                         var_alpha=True,
-                        alpha_start=lambda_[0],
-                        alpha_end=lambda_[1],
+                        alpha_start=alpha[0],
+                        alpha_end=alpha[1],
                                                 )
                 print(f"{save_path}_unlearned")

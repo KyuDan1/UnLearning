@@ -10,3 +10,7 @@ wandb
 output
 qwen-0.5b-lora-finetuned-alpaca-gpt4
 qwen-0.5b-unlearned-lora
+outputModels
+outputModels_checkpoints
+meta-llama-unlearned
+optimized_unlearned_model
