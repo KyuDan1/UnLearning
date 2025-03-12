@@ -10,27 +10,31 @@ import toxic_eval
 from dotenv import load_dotenv
 import os
 import huggingface_hub
+from safetensors.torch import load_file, save_file
+
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 load_dotenv()
-token = os.environ.get('HUGGINGFACE_KEY')
+"""token = os.environ.get('HUGGINGFACE_KEY')
 
 huggingface_hub.login(token = token)
+"""
 
-def low_rank_decomposition(matrix, rank):
-    # SVD를 사용하여 행렬 분해
-    U, S, Vt = np.linalg.svd(matrix, full_matrices=False)
+def low_rank_decomposition_gpu(matrix, rank):
+    """GPU 가속 저차원 분해"""
+    # PyTorch SVD를 사용하여 행렬 분해
+    U, S, Vt = torch.linalg.svd(matrix, full_matrices=False)
     
     # 상위 r개의 특이값만 사용
     U_r = U[:, :rank]
-    S_r = np.diag(S[:rank])
+    S_r = torch.diag(S[:rank])
     Vt_r = Vt[:rank, :]
     
     # W_A와 W_B 계산
-    W_A = U_r @ np.sqrt(S_r)
-    W_B = np.sqrt(S_r) @ Vt_r
+    W_A = U_r @ torch.sqrt(S_r)
+    W_B = torch.sqrt(S_r) @ Vt_r
     
-    return W_A, W_B
+    return W_B, W_A
 
 def svd(W):
         U, Sigma, Vt = np.linalg.svd(W, full_matrices=False)
@@ -51,6 +55,52 @@ def map_alpha(diff_list, a_min=1, a_max=2):
         alphas.append(alpha)
 
     return alphas
+def extract_layer_module_info(key):
+    """키에서 레이어 번호와 모듈 이름을 추출합니다."""
+    parts = key.split('.')
+    
+    # 레이어 번호 찾기
+    layer_idx = None
+    for i, part in enumerate(parts):
+        if part == "layers" and i+1 < len(parts) and parts[i+1].isdigit():
+            layer_idx = int(parts[i+1])
+            break
+    
+    # 모듈 이름 찾기
+    module_name = None
+    module_keywords = ["self_attn", "mlp"]
+    
+    for i, part in enumerate(parts):
+        if part in module_keywords and i+1 < len(parts):
+            if parts[i+1] in ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]:
+                module_name = f"{part}.{parts[i+1]}"
+                break
+    
+    return layer_idx, module_name
+
+def is_lora_A_key(key):
+    """키가 LoRA A 행렬에 해당하는지 확인합니다."""
+    return "lora_A" in key and "weight" in key
+
+def is_lora_B_key(key):
+    """키가 LoRA B 행렬에 해당하는지 확인합니다."""
+    return "lora_B" in key and "weight" in key
+
+def find_matching_B_key(A_key, all_keys):
+    """주어진 A 키에 대응하는 B 키를 찾습니다."""
+    B_key = A_key.replace("lora_A", "lora_B")
+    if B_key in all_keys:
+        return B_key
+    
+    parts = A_key.split('.')
+    for i, part in enumerate(parts):
+        if "lora_A" in part:
+            parts[i] = part.replace("lora_A", "lora_B")
+            potential_B_key = '.'.join(parts)
+            if potential_B_key in all_keys:
+                return potential_B_key
+    
+    return None
 
 def get_variance_diffs(path_plus,
                         path_minus,
