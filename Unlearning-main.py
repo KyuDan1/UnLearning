@@ -411,17 +411,19 @@ if __name__ == "__main__":
                       f"{bmn}_SVDP_constant_3_c",
                       f"{bmn}_SVDP_constant_3_d",]
         models = [(A,C), (B,D), (A,E), (B,E)]
-        for lambda_, save_path, model in zip(alphas, save_paths, models):
-            print(f"{save_path}_unlearning")
-            Unlearn(base_model=base_model_name,
-                    path_plus=model[0],
-                    path_minus=model[1],
-                    rank = 16,
-                    Ours=True,
-                    save_path=save_path,
-                    alpha = lambda_,
-                                        )
-            print(f"{save_path}_unlearned")
+        for alpha in alphas:
+            for save_path, model in zip(save_paths, models):
+                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-")
+                print(f"{save_path}_unlearning")
+                Unlearn(base_model=base_model_name,
+                        path_plus=model[0],
+                        path_minus=model[1],
+                        rank = 16,
+                        Ours=True,
+                        save_path=save_path,
+                        alpha = alpha,
+                                            )
+                print(f"{save_path}_unlearned")
 
         # 4. SVDP alpha increasing
         alphas = [(1,2), (1,3), (2,3), (1.5,2.5)]
@@ -430,19 +432,21 @@ if __name__ == "__main__":
                       f"{bmn}_SVDP_increasing_4_c",
                       f"{bmn}_SVDP_increasing_4_d",]
         models = [(A,C), (B,D), (A,E), (B,E)]
-        for lambda_, save_path, model in zip(alphas, save_paths, models):
-            print(f"{save_path}_unlearning")
-            Unlearn(base_model=base_model_name,
-                    path_plus=model[0],
-                    path_minus=model[1],
-                    rank = 16,
-                    Ours=True,
-                    save_path=save_path,
-                    moving_alpha=True,
-                    alpha_start=lambda_[0],
-                    alpha_end=lambda_[1],
-                                            )
-            print(f"{save_path}_unlearned")
+        for alpha in alphas:
+            for save_path, model in zip(save_paths, models):
+                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                print(f"{save_path}_unlearning")
+                Unlearn(base_model=base_model_name,
+                        path_plus=model[0],
+                        path_minus=model[1],
+                        rank = 16,
+                        Ours=True,
+                        save_path=save_path,
+                        moving_alpha=True,
+                        alpha_start=lambda_[0],
+                        alpha_end=lambda_[1],
+                                                )
+                print(f"{save_path}_unlearned")
         
 
         # 5. SVDP alpha decreasing
@@ -452,19 +456,21 @@ if __name__ == "__main__":
                       f"{bmn}_SVDP_decreasing_5_c",
                       f"{bmn}_SVDP_decreasing_5_d",]
         models = [(A,C), (B,D), (A,E), (B,E)]
-        for lambda_, save_path, model in zip(alphas, save_paths, models):
-            print(f"{save_path}_unlearning")
-            Unlearn(base_model=base_model_name,
-                    path_plus=model[0],
-                    path_minus=model[1],
-                    rank = 16,
-                    Ours=True,
-                    save_path=save_path,
-                    moving_alpha=True,
-                    alpha_start=lambda_[0],
-                    alpha_end=lambda_[1],
-                                            )
-            print(f"{save_path}_unlearned")
+        for alpha in alphas:
+            for save_path, model in zip(save_paths, models):
+                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                print(f"{save_path}_unlearning")
+                Unlearn(base_model=base_model_name,
+                        path_plus=model[0],
+                        path_minus=model[1],
+                        rank = 16,
+                        Ours=True,
+                        save_path=save_path,
+                        moving_alpha=True,
+                        alpha_start=lambda_[0],
+                        alpha_end=lambda_[1],
+                                                )
+                print(f"{save_path}_unlearned")
             
 
 
@@ -475,19 +481,21 @@ if __name__ == "__main__":
                       f"{bmn}_SVDP_layerwise_6_c",
                       f"{bmn}_SVDP_layerwise_6_d",]
         models = [(A,C), (B,D), (A,E), (B,E)]
-        for lambda_, save_path, model in zip(alphas, save_paths, models):
-            print(f"{save_path}_unlearning")
-            Unlearn(base_model=base_model_name,
-                    path_plus=model[0],
-                    path_minus=model[1],
-                    rank = 16,
-                    Ours=True,
-                    save_path=save_path,
-                    var_alpha=True,
-                    alpha_start=lambda_[0],
-                    alpha_end=lambda_[1],
-                                            )
-            print(f"{save_path}_unlearned")
+        for alpha in alphas:
+            for save_path, model in zip(save_paths, models):
+                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                print(f"{save_path}_unlearning")
+                Unlearn(base_model=base_model_name,
+                        path_plus=model[0],
+                        path_minus=model[1],
+                        rank = 16,
+                        Ours=True,
+                        save_path=save_path,
+                        var_alpha=True,
+                        alpha_start=lambda_[0],
+                        alpha_end=lambda_[1],
+                                                )
+                print(f"{save_path}_unlearned")
             
 
         # 7. Ablation Unlearning (단순 task arithmetic)
@@ -497,19 +505,21 @@ if __name__ == "__main__":
                       f"{bmn}_Ablation_taskarithmetic_7_c",
                       f"{bmn}_Ablation_taskarithmetic_7_d",]
         models = [(A,C), (B,D), (A,E), (B,E)]
-        for lambda_, save_path, model in zip(alphas, save_paths, models):
-            print(f"{save_path}_unlearning")
-            Unlearn(base_model=base_model_name,
-                    path_plus=model[0],
-                    path_minus=model[1],
-                    rank = 16,
-                    task_arithmetic=True,
-                    save_path=save_path,
-                    moving_alpha=True,
-                    alpha_start=lambda_[0],
-                    alpha_end=lambda_[1],
-                                            )
-            print(f"{save_path}_unlearned")
+        for alpha in alphas:
+            for save_path, model in zip(save_paths, models):
+                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                print(f"{save_path}_unlearning")
+                Unlearn(base_model=base_model_name,
+                        path_plus=model[0],
+                        path_minus=model[1],
+                        rank = 16,
+                        task_arithmetic=True,
+                        save_path=save_path,
+                        moving_alpha=True,
+                        alpha_start=lambda_[0],
+                        alpha_end=lambda_[1],
+                                                )
+                print(f"{save_path}_unlearned")
             
         # 8. Ablation Unlearning (Ext-Sub)
         alphas = [(2,1), (3,1), (3,2), (2.5,1.5)] # task Ext-Sub의 lambda이므로 좀 달라져야 함.
@@ -518,19 +528,21 @@ if __name__ == "__main__":
                       f"{bmn}_Ablation_Ext_Sub_8_c",
                       f"{bmn}_Ablation_Ext_Sub_8_d",]
         models = [(A,C), (B,D), (A,E), (B,E)]
-        for lambda_, save_path, model in zip(alphas, save_paths, models):
-            print(f"{save_path}_unlearning")
-            Unlearn(base_model=base_model_name,
-                    path_plus=model[0],
-                    path_minus=model[1],
-                    rank = 16,
-                    Ext_Sub=True,
-                    save_path=save_path,
-                    moving_alpha=True,
-                    alpha_start=lambda_[0],
-                    alpha_end=lambda_[1],
-                                            )
-            print(f"{save_path}_unlearned")
+        for alpha in alphas:
+            for save_path, model in zip(save_paths, models):
+                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                print(f"{save_path}_unlearning")
+                Unlearn(base_model=base_model_name,
+                        path_plus=model[0],
+                        path_minus=model[1],
+                        rank = 16,
+                        Ext_Sub=True,
+                        save_path=save_path,
+                        moving_alpha=True,
+                        alpha_start=lambda_[0],
+                        alpha_end=lambda_[1],
+                                                )
+                print(f"{save_path}_unlearned")
 
 
         # 9. Bootstrap Unlearning (layerwise)
@@ -540,16 +552,18 @@ if __name__ == "__main__":
                       f"{bmn}_Bootstrap_layerwise_9_c",
                       f"{bmn}_Bootstrap_layerwise_9_d",]
         models = [(F,C), (G,D), (H,E), (I,E)]
-        for lambda_, save_path, model in zip(alphas, save_paths, models):
-            print(f"{save_path}_unlearning")
-            Unlearn(base_model=base_model_name,
-                    path_plus=model[0],
-                    path_minus=model[1],
-                    rank = 16,
-                    Ours=True,
-                    save_path=save_path,
-                    var_alpha=True,
-                    alpha_start=lambda_[0],
-                    alpha_end=lambda_[1],
-                                            )
-            print(f"{save_path}_unlearned")
+        for alpha in alphas:
+            for save_path, model in zip(save_paths, models):
+                save_path = save_path + "_alpha_" + str(alpha).replace(".", "-").replace(",","-").replace(" ", "")
+                print(f"{save_path}_unlearning")
+                Unlearn(base_model=base_model_name,
+                        path_plus=model[0],
+                        path_minus=model[1],
+                        rank = 16,
+                        Ours=True,
+                        save_path=save_path,
+                        var_alpha=True,
+                        alpha_start=lambda_[0],
+                        alpha_end=lambda_[1],
+                                                )
+                print(f"{save_path}_unlearned")
