@@ -1,6 +1,6 @@
 import torch
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 os.environ["WANDB_DISABLED"] = "true"
 
 from datasets import Dataset
@@ -174,7 +174,10 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
 
 # Main execution
 if __name__ == "__main__":
-    models = ["meta-llama/Llama-3.1-8B", "mistralai/Mistral-7B-v0.3", "Qwen/Qwen2.5-7B"]
+    models = ["meta-llama/Llama-3.1-8B", 
+              #"mistralai/Mistral-7B-v0.3", 
+              # #"Qwen/Qwen2.5-7B"
+              ]
     dataset_list = [
         #'alpaca_gpt4_data.json',
         #'WizardLM_alpaca_evol_instruct_70k.json',
