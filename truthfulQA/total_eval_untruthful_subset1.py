@@ -17,7 +17,7 @@ def evaluate_lora_models(folder_path, base_model_path="meta-llama/Llama-2-7b-hf"
     for model in all_models:
         model_path = os.path.join(folder_path, model)
         
-        """# Untruthful eval 대상 확인
+        # Untruthful eval 대상 확인
         if "_a" in model_path or "_b" in model_path:
             print(f"모델 '{model_path}'에 대해 truthfulqa eval 실행 (W_A, W_B 교환)")
             # 여기서 evaluate_model_untruthfulness 함수를 직접 호출하는 대신,
@@ -41,9 +41,9 @@ def evaluate_lora_models(folder_path, base_model_path="meta-llama/Llama-2-7b-hf"
                 num_samples=100,
                 output_file=f"{model_path.replace('/','-')}_HalluEval.json"
             )
-            print(f"모델 '{model_path}'에 대해 Hallueval 끝")"""
+            print(f"모델 '{model_path}'에 대해 Hallueval 끝")
             
-        # Toxic eval 대상 확인
+        """# Toxic eval 대상 확인
         if "_c_" in model_path or "_d_" in model_path:
         #if "meta-llama_Llama-3.1-8B_lora_SVDP_layerwise_6_d_alpha_(2-1)" in model_path:
             print(model_path)
@@ -80,7 +80,7 @@ def evaluate_lora_models(folder_path, base_model_path="meta-llama/Llama-2-7b-hf"
                 input_path=output_path,
                 output_path=output_path.split('.json')[0]+"result.json",
                 checkpoint_path="checkpoints/toxic_debiased-c7548aa0.ckpt"
-            )
+            )"""
 
 
 # 실행 예시
