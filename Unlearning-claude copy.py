@@ -8,7 +8,7 @@ from safetensors.torch import load_file, save_file
 import time
 from tqdm import tqdm
 import gc
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 # GPU 설정
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {DEVICE}")
@@ -551,41 +551,65 @@ if __name__ == "__main__":
         #},
         
         # 4. SVDP alpha increasing
-        {
-            "name": "SVDP_increasing",
-            "param_sets": [
-                {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 2},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 3},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 3},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 1.5, "alpha_end": 2.5}
-            ],
-            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
-        },
+        #{
+        #    "name": "SVDP_increasing",
+        #    "param_sets": [
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 2},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 3},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 3},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 1.5, "alpha_end": 2.5}
+        #    ],
+        #    "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
+        #},
         
         # 5. SVDP alpha decreasing
+        #{
+        #    "name": "SVDP_decreasing",
+        #    "param_sets": [
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 1},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 1},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
+        #    ],
+        #    "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
+        #},
+        
+        
+        # 7. Ablation Unlearning (단순 task arithmetic)
         {
-            "name": "SVDP_decreasing",
+            "name": "Ablation_taskarithmetic",
             "param_sets": [
-                {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 1},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 1},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
+                {"task_arithmetic": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 1},
+                {"task_arithmetic": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 1},
+                {"task_arithmetic": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
+                {"task_arithmetic": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
             ],
             "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
         },
         
-        # 6. SVDP alpha layer-wise (BEST)
+        # 8. Ablation Unlearning (Ext-Sub)
         {
-            "name": "SVDP_layerwise",
+            "name": "Ablation_Ext_Sub",
+            "param_sets": [
+                {"Ext_Sub": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 1},
+                {"Ext_Sub": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 1},
+                {"Ext_Sub": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
+                {"Ext_Sub": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
+            ],
+            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
+        },
+        
+        # 9. Bootstrap Unlearning (layerwise)
+        {
+            "name": "Bootstrap_layerwise",
             "param_sets": [
                 {"Ours": True, "var_alpha": True, "alpha_start": 2, "alpha_end": 1},
                 {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 1},
                 {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 2},
                 {"Ours": True, "var_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
             ],
-            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
-        },
-        
+            "model_pairs": [('F','C'), ('G','D'), ('H','E'), ('I','E')]
+        }
     ]
     
     # 실행할 모델 선택

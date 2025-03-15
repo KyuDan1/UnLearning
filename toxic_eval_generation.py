@@ -10,7 +10,13 @@ from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader, SequentialSampler
 from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedTokenizer
 from peft import PeftConfig, PeftModel
-
+from peft import PeftConfig, PeftModel
+import torch
+from transformers import AutoModelForCausalLM
+import os
+import json
+from safetensors import safe_open
+from safetensors.torch import save_file
 
 PROMPT_DICT = {
     "prompt_input": (
@@ -120,12 +126,60 @@ def predict(data: List[dict], model: AutoModelForCausalLM, tokenizer: AutoTokeni
     return outputs
 
 
-def load_model(model_name_or_path: Union[Path, str]):
+
+def load_model(model_name_or_path: Union[Path, str], swap_lora_weights: bool = False):
     if "lora" in model_name_or_path or "ia3" in model_name_or_path or "prefix" in model_name_or_path:
         config = PeftConfig.from_pretrained(model_name_or_path)
         model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path, torch_dtype=torch.float16, device_map="cpu",)
-        model = PeftModel.from_pretrained(model, model_name_or_path)
-        if "lora" in model_name_or_path:
+        
+        if "lora" in model_name_or_path and swap_lora_weights:
+            safetensors_path = os.path.join(model_name_or_path, "adapter_model.safetensors")
+            adapter_weights = {}
+            with safe_open(safetensors_path, framework="pt", device="cpu") as f:
+                for key in f.keys():
+                    adapter_weights[key] = f.get_tensor(key)
+            target_modules = [
+                                "self_attn.o_proj",
+                                "mlp.up_proj",
+                                "self_attn.q_proj",
+                                "self_attn.k_proj",
+                                "mlp.down_proj",
+                                "self_attn.v_proj",
+                                "mlp.gate_proj"
+                            ]
+            for key in list(adapter_weights.keys()):
+                # LoRA 가중치 키인지 확인
+                if any(module in key for module in target_modules):
+                    if ".lora_A." in key:
+                        # 해당하는 B 가중치 키 찾기
+                        b_key = key.replace(".lora_A.", ".lora_B.")
+                        if b_key in adapter_weights:
+                            # A와 B 가중치 교환
+                            temp = adapter_weights[key].clone()
+                            adapter_weights[key] = adapter_weights[b_key].clone()
+                            adapter_weights[b_key] = temp
+                    # 수정된 가중치 저장
+            modified_path = f"{model_name_or_path}_swapped"
+            os.makedirs(modified_path, exist_ok=True)
+
+            # safetensors 형식으로 저장
+            save_file(adapter_weights, os.path.join(modified_path, "adapter_model.safetensors"))
+
+            # 설정 파일 복사
+            with open(os.path.join(model_name_or_path, "adapter_config.json"), "r") as f:
+                adapter_config = json.load(f)
+            with open(os.path.join(modified_path, "adapter_config.json"), "w") as f:
+                json.dump(adapter_config, f, indent=2)
+
+            # 교환된 가중치로 모델 로드
+            model = PeftModel.from_pretrained(
+                model, 
+                modified_path
+            )
+        
+
+        if "lora" in model_name_or_path and swap_lora_weights == False:
+            model = PeftModel.from_pretrained(model, model_name_or_path)
             model = model.merge_and_unload()
         model = model.cuda()
         
@@ -143,9 +197,9 @@ def load_model(model_name_or_path: Union[Path, str]):
     return tokenizer, model
 
 
-def main(model_name_or_path: Union[Path, str], input_path: Union[Path, str], output_path: Union[Path, str], batch_size: int):
+def main(model_name_or_path: Union[Path, str], input_path: Union[Path, str], output_path: Union[Path, str], batch_size: int, swap_lora_weights: bool):
     ## Step 1: Load the tokenizer and model
-    tokenizer, model = load_model(model_name_or_path)
+    tokenizer, model = load_model(model_name_or_path, swap_lora_weights=swap_lora_weights)
 
     ## Step 2: Load the data
     with open(input_path, "r", encoding="utf-8") as f:

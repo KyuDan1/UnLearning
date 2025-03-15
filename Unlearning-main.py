@@ -19,8 +19,22 @@ load_dotenv()
 
 huggingface_hub.login(token = token)
 """
+def low_rank_decomposition(matrix, rank):
+    # SVD를 사용하여 행렬 분해
+    U, S, Vt = np.linalg.svd(matrix, full_matrices=False)
+    
+    # 상위 r개의 특이값만 사용
+    U_r = U[:, :rank]
+    S_r = np.diag(S[:rank])
+    Vt_r = Vt[:rank, :]
+    
+    # W_A와 W_B 계산
+    W_A = U_r @ np.sqrt(S_r)
+    W_B = np.sqrt(S_r) @ Vt_r
+    
+    return W_A, W_B
 
-def low_rank_decomposition_gpu(matrix, rank):
+def low_rank_decomposition(matrix, rank):
     """GPU 가속 저차원 분해"""
     # PyTorch SVD를 사용하여 행렬 분해
     U, S, Vt = torch.linalg.svd(matrix, full_matrices=False)
@@ -34,7 +48,7 @@ def low_rank_decomposition_gpu(matrix, rank):
     W_A = U_r @ torch.sqrt(S_r)
     W_B = torch.sqrt(S_r) @ Vt_r
     
-    return W_B, W_A
+    return W_A, W_B 
 
 def svd(W):
         U, Sigma, Vt = np.linalg.svd(W, full_matrices=False)

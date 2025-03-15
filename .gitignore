@@ -14,3 +14,6 @@ outputModels
 outputModels_checkpoints
 meta-llama-unlearned
 optimized_unlearned_model
+gpu_unlearned
+meta-llama-unlearned_subset1
+meta-llama-unlearned_subset2
