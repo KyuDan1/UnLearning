@@ -188,6 +188,7 @@ def load_model(model_name_or_path: Union[Path, str], swap_lora_weights: bool = F
         model = AutoModelForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16, device_map="auto")
         tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=False)
 
+    # if error occurs, add 'lora_' on model name.
     tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
 

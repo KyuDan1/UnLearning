@@ -169,6 +169,98 @@ def get_variance_diffs(path_plus,
     return modules_var
 
 import numpy as np
+def spectral_geometric_unlearning(W_plus, W_minus, alpha=0.5, rank_factor=0.2, beta=0.6):
+    """
+    Spectral-Geometric Unlearning: 스펙트럼 분해와 기하학적 접근을 결합한 하이브리드 방법
+    
+    Parameters:
+    - W_plus: 유지할 가중치(역량 보존)
+    - W_minus: 언러닝할 가중치(제거할 역량)
+    - alpha: 언러닝 강도 (0-1)
+    - rank_factor: 유해 서브스페이스에 사용할 차원 비율 (0-1)
+    - beta: 스펙트럼 vs 기하학적 접근의 가중치 (0-1, 높을수록 스펙트럼 방식 선호)
+    
+    Returns:
+    - W_prime: 언러닝 후 수정된 가중치
+    """
+    # 차원 정보 가져오기
+    d_row, d_col = W_plus.shape
+    
+    # 1. W_minus의 스펙트럼 분해 (SVD)
+    U, S, Vt = np.linalg.svd(W_minus, full_matrices=False)
+    
+    # 차원에 기반한 랭크 결정
+    rank = max(1, int(min(d_row, d_col) * rank_factor))
+    
+    # 유해 방향 추출 및 중요도에 따른 가중치 부여
+    U_toxic = U[:, :rank]
+    S_toxic = S[:rank] / S[0]  # 가장 큰 특이값으로 정규화
+    
+    # 2. 각 행 벡터 처리
+    W_prime_rows = []
+    
+    for i in range(d_row):
+        v_plus = W_plus[i]
+        v_minus = W_minus[i]
+        
+        # 벡터 노름 계산
+        v_plus_norm = np.linalg.norm(v_plus)
+        v_minus_norm = np.linalg.norm(v_minus)
+        
+        # 벡터가 0인 경우 처리 건너뛰기
+        if v_plus_norm > 0 and v_minus_norm > 0:
+            # 벡터 정규화
+            v_plus_hat = v_plus / v_plus_norm
+            v_minus_hat = v_minus / v_minus_norm
+            
+            # 스펙트럼 접근법: 유해 서브스페이스로 투영
+            # 특이값에 따라 유해 방향에 가중치 부여
+            weighted_projection = np.zeros_like(v_plus)
+            for j in range(rank):
+                u_j = U_toxic[:, j]
+                s_j = S_toxic[j]
+                proj_j = np.dot(v_plus, u_j) * u_j
+                weighted_projection += s_j * proj_j
+            
+            # 기하학적 접근법: 결함 역량 추출
+            # 공통 방향 (공유 역량) 계산
+            v_common = v_plus_hat + v_minus_hat
+            v_common_norm = np.linalg.norm(v_common)
+            
+            if v_common_norm > 0:
+                v_common_hat = v_common / v_common_norm
+                
+                # v_minus를 공통 방향에 투영
+                proj_scalar = np.dot(v_minus, v_common_hat)
+                v_common_minus = proj_scalar * v_common_hat
+                
+                # 결함 구성요소 추출 (v_minus에만 고유한 부분)
+                v_deficiency = v_minus - v_common_minus
+            else:
+                v_deficiency = v_minus
+            
+            # 벡터 정렬에 따른 적응형 알파
+            alignment = np.dot(v_plus_hat, v_minus_hat)
+            adaptive_alpha = alpha * (1 + 0.5 * abs(alignment))
+            
+            # 결합된 접근법: 두 방법의 가중 합
+            combined_adjustment = beta * weighted_projection + (1-beta) * v_deficiency
+            
+            # 언러닝 적용
+            v_prime = v_plus - adaptive_alpha * combined_adjustment
+            
+            # 원래 크기 보존
+            v_prime_norm = np.linalg.norm(v_prime)
+            if v_prime_norm > 0:
+                v_prime = v_prime * (v_plus_norm / v_prime_norm)
+        else:
+            # 0 벡터에 대한 수정 없음
+            v_prime = v_plus.copy()
+        
+        W_prime_rows.append(v_prime)
+    
+    W_prime = np.vstack(W_prime_rows)
+    return W_prime
 
 def deficiency_capability_unlearning(W_plus, W_minus, lambda_param):
     # 행 차원

@@ -1,6 +1,6 @@
 import torch
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 os.environ["WANDB_DISABLED"] = "true"
 
 from datasets import Dataset
@@ -25,7 +25,7 @@ def Finetuning(model_source, rank=4, dropout=0.1, max_length=512, lr=2e-5, batch
         config={
             "model": model_source,
             "lora_rank": rank,
-            "lora_alpha": rank*2,
+            "lora_alpha": rank*2,[]
             "learning_rate": lr,
             "batch_size": batch_size,
             "epochs": epochs

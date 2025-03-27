@@ -1,16 +1,12 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-import torch
-device = torch.device("cuda:0")  # cuda:0는 CUDA_VISIBLE_DEVICES 환경에서의 첫 번째 GPU를 의미
-torch.cuda.set_device(device)
 import Untruthful_eval as Ue
 import toxic_eval_generation
 import toxic_eval
 from peft import PeftModel, PeftConfig
-
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 def evaluate_lora_models(folder_path, base_model_path="meta-llama/Llama-2-7b-hf"):
 
@@ -48,8 +44,26 @@ def evaluate_lora_models(folder_path, base_model_path="meta-llama/Llama-2-7b-hf"
             print(f"모델 '{model_path}'에 대해 Hallueval 끝")"""
             
         # Toxic eval 대상 확인
-        if "none" in model_path:
+        if "lora_output" in model_path:
         #if "meta-llama_Llama-3.1-8B_lora_SVDP_layerwise_6_d_alpha_(2-1)" in model_path:
+            print(model_path)
+            output_path = "eval_toxic/" + model_path + "_toxic_gen.json"
+                        
+            # toxic_eval_generation 모듈을 직접 수정하는 대신 래퍼 함수 사용
+            toxic_eval_generation.main(
+                model_name_or_path=model_path,
+                batch_size=2,
+                input_path="data/toxic_test.json",
+                output_path=output_path,
+                swap_lora_weights=False
+            )
+            
+            toxic_eval.main(
+                input_path=output_path,
+                output_path=output_path.split('.json')[0]+"result.json",
+                checkpoint_path="checkpoints/toxic_debiased-c7548aa0.ckpt"
+            )
+        elif "c--" in model_path or "d--" in model_path:
             print(model_path)
             output_path = "eval_toxic/" + model_path + "_toxic_gen.json"
                         
@@ -67,34 +81,13 @@ def evaluate_lora_models(folder_path, base_model_path="meta-llama/Llama-2-7b-hf"
                 output_path=output_path.split('.json')[0]+"result.json",
                 checkpoint_path="checkpoints/toxic_debiased-c7548aa0.ckpt"
             )
-        elif "c--" in model_path or "d--" or "spectral" in model_path:
-            print(model_path)
-            output_path = "eval_toxic/" + model_path + "_toxic_gen.json"
-                        
-            # toxic_eval_generation 모듈을 직접 수정하는 대신 래퍼 함수 사용
-            toxic_eval_generation.main(
-                model_name_or_path=model_path,
-                batch_size=8,
-                input_path="data/toxic_test.json",
-                output_path=output_path,
-                swap_lora_weights=False
-            )
-            
-            toxic_eval.main(
-                input_path=output_path,
-                output_path=output_path.split('.json')[0]+"result.json",
-                checkpoint_path="checkpoints/toxic_debiased-c7548aa0.ckpt"
-            )
 
 
 # 실행 예시
 if __name__ == "__main__":
-    #os.environ["CUDA_VISIBLE_DEVICES"] = "6"
     # LoRA 모델이 저장된 폴더 경로 설정
-    models_folder = "gpu_unlearned/meta-llama_Llama-3.1-8B"
+    models_folder = "outputModels"
     base_model_path = "meta-llama/Llama-3.1-8B"  # 기본 모델 경로 설정
-    print(f"Available GPUs: {torch.cuda.device_count()}")
-    print(f"Current GPU: {torch.cuda.current_device()}")
-    print(f"GPU name: {torch.cuda.get_device_name(torch.cuda.current_device())}")
+    
     # 평가 실행
     evaluate_lora_models(models_folder, base_model_path)

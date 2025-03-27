@@ -8,7 +8,7 @@ from safetensors.torch import load_file, save_file
 import time
 from tqdm import tqdm
 import gc
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # GPU 설정
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {DEVICE}")
@@ -96,6 +96,194 @@ def find_matching_B_key(A_key, all_keys):
                 return potential_B_key
     
     return None
+
+
+import numpy as np
+import torch
+
+def spectral_geometric_unlearning(W_plus, W_minus, alpha=0.5, rank_factor=0.2, beta=0.6):
+    """
+    Spectral-Geometric Unlearning: 스펙트럼 분해와 기하학적 접근을 결합한 하이브리드 방법
+    
+    Parameters:
+    - W_plus: 유지할 가중치(역량 보존), NumPy 배열 또는 PyTorch 텐서
+    - W_minus: 언러닝할 가중치(제거할 역량), NumPy 배열 또는 PyTorch 텐서
+    - alpha: 언러닝 강도 (0-1)
+    - rank_factor: 유해 서브스페이스에 사용할 차원 비율 (0-1)
+    - beta: 스펙트럼 vs 기하학적 접근의 가중치 (0-1, 높을수록 스펙트럼 방식 선호)
+    
+    Returns:
+    - W_prime: 언러닝 후 수정된 가중치 (입력과 동일한 타입 - NumPy 또는 PyTorch)
+    """
+    # PyTorch 텐서인지 확인하고 처리
+    is_torch_tensor = isinstance(W_plus, torch.Tensor)
+    device = None
+    
+    if is_torch_tensor:
+        device = W_plus.device
+        # NumPy로 변환
+        W_plus_np = W_plus.detach().cpu().numpy()
+        W_minus_np = W_minus.detach().cpu().numpy()
+    else:
+        W_plus_np = W_plus
+        W_minus_np = W_minus
+    
+    # 차원 정보 확인
+    plus_shape = W_plus_np.shape
+    minus_shape = W_minus_np.shape
+    
+    # 차원 불일치 처리: 차원이 다르면 차원 맞추기 시도
+    if plus_shape != minus_shape:
+        print(f"Warning: Shape mismatch - W_plus: {plus_shape}, W_minus: {minus_shape}")
+        
+        # 1D 벡터인 경우 (행렬을 벡터로 처리해야 하는 경우)
+        if len(plus_shape) == 1 and len(minus_shape) == 1:
+            # 차원을 맞출 수 없는 경우 오류
+            if plus_shape[0] != minus_shape[0]:
+                raise ValueError(f"Cannot process vectors with different dimensions: {plus_shape[0]} vs {minus_shape[0]}")
+            
+            # 1D 벡터 처리
+            # 벡터 정규화
+            plus_norm = np.linalg.norm(W_plus_np)
+            minus_norm = np.linalg.norm(W_minus_np)
+            
+            if plus_norm > 0 and minus_norm > 0:
+                plus_hat = W_plus_np / plus_norm
+                minus_hat = W_minus_np / minus_norm
+                
+                # 공통 방향 계산
+                common_vec = plus_hat + minus_hat
+                common_norm = np.linalg.norm(common_vec)
+                
+                if common_norm > 0:
+                    common_hat = common_vec / common_norm
+                    projection = np.dot(W_minus_np, common_hat) * common_hat
+                    deficiency = W_minus_np - projection
+                else:
+                    deficiency = W_minus_np
+                
+                # 벡터 정렬에 따른 적응형 알파
+                alignment = np.dot(plus_hat, minus_hat)
+                adaptive_alpha = alpha * (1 + 0.5 * abs(alignment))
+                
+                # 언러닝 적용
+                W_prime = W_plus_np - adaptive_alpha * deficiency
+            else:
+                W_prime = W_plus_np.copy()
+                
+            # PyTorch 텐서로 변환 (필요한 경우)
+            if is_torch_tensor:
+                W_prime = torch.tensor(W_prime, dtype=W_plus.dtype, device=device)
+            
+            return W_prime
+    
+    # 2D 행렬 또는 차원이 맞는 경우 일반 처리
+    # 차원 정보 가져오기
+    d_row, d_col = W_plus_np.shape if len(plus_shape) > 1 else (1, plus_shape[0])
+    
+    # W_plus_np가 1D인 경우 2D로 변환
+    if len(plus_shape) == 1:
+        W_plus_np = W_plus_np.reshape(1, -1)
+        W_minus_np = W_minus_np.reshape(1, -1)
+    
+    # 1. W_minus의 스펙트럼 분해 (SVD)
+    U, S, Vt = np.linalg.svd(W_minus_np, full_matrices=False)
+    
+    # 차원에 기반한 랭크 결정
+    rank = max(1, int(min(d_row, d_col) * rank_factor))
+    rank = min(rank, len(S))  # 랭크가 특이값 개수를 초과하지 않도록
+    
+    # 유해 방향 추출 및 중요도에 따른 가중치 부여
+    U_toxic = U[:, :rank] if U.shape[1] >= rank else U
+    S_toxic = S[:rank] / S[0] if len(S) > 0 else np.array([1.0])  # 가장 큰 특이값으로 정규화
+    
+    # 2. 각 행 벡터 처리
+    W_prime_rows = []
+    
+    for i in range(d_row):
+        v_plus = W_plus_np[i]
+        v_minus = W_minus_np[i]
+        
+        # 벡터 노름 계산
+        v_plus_norm = np.linalg.norm(v_plus)
+        v_minus_norm = np.linalg.norm(v_minus)
+        
+        # 벡터가 0인 경우 처리 건너뛰기
+        if v_plus_norm > 0 and v_minus_norm > 0:
+            # 벡터 정규화
+            v_plus_hat = v_plus / v_plus_norm
+            v_minus_hat = v_minus / v_minus_norm
+            
+            # 스펙트럼 접근법: 유해 서브스페이스로 투영
+            # 특이값에 따라 유해 방향에 가중치 부여
+            weighted_projection = np.zeros_like(v_plus)
+            
+            if rank > 0 and i < U_toxic.shape[0]:
+                for j in range(min(rank, U_toxic.shape[1])):
+                    if j < len(S_toxic):
+                        u_j = U_toxic[i, j] if len(U_toxic.shape) > 1 else U_toxic[j]
+                        s_j = S_toxic[j]
+                        # 벡터와 방향의 차원이 맞는지 확인
+                        if np.isscalar(u_j):
+                            proj_j = u_j * u_j * v_plus
+                        else:
+                            try:
+                                proj_j = np.dot(v_plus, u_j) * u_j
+                            except ValueError:
+                                # 차원 불일치 시 건너뛰기
+                                continue
+                        weighted_projection += s_j * proj_j
+            
+            # 기하학적 접근법: 결함 역량 추출
+            # 공통 방향 (공유 역량) 계산
+            v_common = v_plus_hat + v_minus_hat
+            v_common_norm = np.linalg.norm(v_common)
+            
+            if v_common_norm > 0:
+                v_common_hat = v_common / v_common_norm
+                
+                # v_minus를 공통 방향에 투영
+                proj_scalar = np.dot(v_minus, v_common_hat)
+                v_common_minus = proj_scalar * v_common_hat
+                
+                # 결함 구성요소 추출 (v_minus에만 고유한 부분)
+                v_deficiency = v_minus - v_common_minus
+            else:
+                v_deficiency = v_minus
+            
+            # 벡터 정렬에 따른 적응형 알파
+            alignment = np.dot(v_plus_hat, v_minus_hat)
+            adaptive_alpha = alpha * (1 + 0.5 * abs(alignment))
+            
+            # 결합된 접근법: 두 방법의 가중 합
+            combined_adjustment = beta * weighted_projection + (1-beta) * v_deficiency
+            
+            # 언러닝 적용
+            v_prime = v_plus - adaptive_alpha * combined_adjustment
+            
+            # 원래 크기 보존
+            v_prime_norm = np.linalg.norm(v_prime)
+            if v_prime_norm > 0:
+                v_prime = v_prime * (v_plus_norm / v_prime_norm)
+        else:
+            # 0 벡터에 대한 수정 없음
+            v_prime = v_plus.copy()
+        
+        W_prime_rows.append(v_prime)
+    
+    # 행렬로 재구성
+    W_prime = np.vstack(W_prime_rows)
+    
+    # 원래 입력이 1D 벡터였으면 다시 1D로 변환
+    if len(plus_shape) == 1:
+        W_prime = W_prime.flatten()
+    
+    # PyTorch 텐서로 다시 변환
+    if is_torch_tensor:
+        W_prime = torch.tensor(W_prime, dtype=W_plus.dtype, device=device)
+    
+    return W_prime
+
 
 def deficiency_capability_unlearning_gpu(W_plus, W_minus, lambda_param):
     """GPU 가속 결함 능력 언러닝"""
@@ -252,6 +440,8 @@ def Unlearn(base_model,
             Ext_Sub_lambda = 2.0,
             debug = False,
             batch_size = 5,
+
+            Ours_spectral = False,
             ):
     
     start_time = time.time()
@@ -390,6 +580,10 @@ def Unlearn(base_model,
                 U_proj = U_toxic @ U_toxic.T
                 toxic_of_Wplus = U_proj @ W_plus
                 new_W = W_plus - toxic_of_Wplus * current_alpha
+            
+            elif Ours_spectral:
+                new_W = spectral_geometric_unlearning(W_minus=W_minus, W_plus=W_plus)
+
             else:
                 # 기본값
                 new_W = W_plus
@@ -521,7 +715,7 @@ if __name__ == "__main__":
     model_output_dir = []
     for model_source in model_list:
         for data_source in dataset_list:
-            model_output_dir.append(f"outputModels/output_{model_source.replace('/','_')}_by_{data_source.replace('.json','')}")
+            model_output_dir.append(f"outputModels/lora_output_{model_source.replace('/','_')}_by_{data_source.replace('.json','')}")
 
     # 모델 경로에 쉽게 접근하기 위한 사전 생성
     model_path_map = {
@@ -551,39 +745,48 @@ if __name__ == "__main__":
         #},
         
         # 4. SVDP alpha increasing
-        {
-            "name": "SVDP_increasing",
-            "param_sets": [
-                {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 2},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 3},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 3},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 1.5, "alpha_end": 2.5}
-            ],
-            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
-        },
-        
+        #{
+        #    "name": "SVDP_increasing",
+        #    "param_sets": [
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 2},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 1, "alpha_end": 3},
+        #        {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 3},
+        ##        {"Ours": True, "moving_alpha": True, "alpha_start": 1.5, "alpha_end": 2.5}
+         #   ],
+         #   "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
+        #},
+       # 
         # 5. SVDP alpha decreasing
-        {
-            "name": "SVDP_decreasing",
-            "param_sets": [
-                {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 1},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 1},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
-                {"Ours": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
-            ],
-            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
-        },
+        #{
+           # "name": "SVDP_decreasing",
+           # "param_sets": [
+             #   {"Ours": True, "moving_alpha": True, "alpha_start": 2, "alpha_end": 1},
+            #    {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 1},
+           #     {"Ours": True, "moving_alpha": True, "alpha_start": 3, "alpha_end": 2},
+          #      {"Ours": True, "moving_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
+         #   ],
+        #    "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
+        #},
         
         # 6. SVDP alpha layer-wise (BEST)
+        #{
+        #    "name": "SVDP_layerwise",
+        #    "param_sets": [
+        ###        {"Ours": True, "var_alpha": True, "alpha_start": 2, "alpha_end": 1},
+        #        {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 1},
+        #        {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 2},
+        #        {"Ours": True, "var_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
+        #    ],
+        #    "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
+        #},
+
+        # test_sepctral unlearning
         {
-            "name": "SVDP_layerwise",
+            "name": "test_spectral unlearning",
             "param_sets": [
-                {"Ours": True, "var_alpha": True, "alpha_start": 2, "alpha_end": 1},
-                {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 1},
-                {"Ours": True, "var_alpha": True, "alpha_start": 3, "alpha_end": 2},
-                {"Ours": True, "var_alpha": True, "alpha_start": 2.5, "alpha_end": 1.5}
+                {"Ours_spectral": True, "var_alpha": True, "alpha_start": 2, "alpha_end": 1},
             ],
-            "model_pairs": [('A','C'), ('B','D'), ('A','E'), ('B','E')]
+            "model_pairs": [('A','E'), ('B','E')]
         },
         
     ]
